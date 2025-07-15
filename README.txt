@@ -1,0 +1,1 @@
+pipeek is a fast, stream-based CLI, for searching digit patterns (like in Pi) inside large text or compressed files. It highlights matches with surrounding context, shows their absolute position. Designed for performance, it processes gigabytes efficiently using buffered reads and byte-level filtering.
