@@ -1,0 +1,23 @@
+[project]
+name = "pipeek"
+version = "0.1.0"
+description = "Terminal media renderer."
+authors = [{ name = "Danilo Patrial" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "colorama",
+    "click",
+    "pytube",
+    "yt-dlp",
+    "platformdirs"
+]
+
+[project.scripts]
+apollo = "apollo.__main__:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
