@@ -59,6 +59,7 @@ except (ImportError, NameError):
     )
 
 from importlib.metadata import version, PackageNotFoundError
+from concurrent.futures import ThreadPoolExecutor
 
 
 # --- Configuration File ------------------------------------------------------------------------------------
@@ -129,13 +130,10 @@ def _parse_bytes(memory_value: str, /) -> int:
 
 def _iter_needle_indexes(haystack: bytes, needle: bytes, /) -> t.Iterator[int]:
     """Iterator of indices where needle occurs."""
-    start: int = 0
-    while True:
-        i: int = haystack.find(needle, start)
-        if i == -1:
-            return
-        yield i
-        start = i + 1
+    idx = haystack.find(needle)
+    while idx != -1:
+        yield idx
+        idx = haystack.find(needle, idx + 1)
 
 
 # --- Steam-Search Engine -----------------------------------------------------------------------------------
@@ -175,26 +173,23 @@ def scan_stream(
 
     tail: bytes = b""
     position: int = -1
-
-    dec_filter: bytes = bytes.maketrans(b"", b"")
-    delete_chars: bytes = b".\n\r "
+    len_pattern: int = len(pattern)
 
     while chunk := stream.read(buffer_size):
         chunk: bytes = tail + chunk
-        data: bytes = chunk.translate(dec_filter, delete_chars)
 
-        for idx in _iter_needle_indexes(data, pattern):
+        for idx in _iter_needle_indexes(chunk, pattern):
 
-            absolute_position: int = position + idx + 1
-            left_context: bytes = data[max(0, idx - around) : idx]
-            right_context: bytes = data[
-                idx + len(pattern) : idx + len(pattern) + around
+            absolute_position: int = position + idx
+            left_context: bytes = chunk[max(0, idx - around) : idx]
+            right_context: bytes = chunk[
+                idx + len_pattern : idx + len_pattern + around
             ]
 
             yield Match(absolute_position, left_context, right_context)
 
-        position += len(data)
-        tail = data[-(around + len(pattern)) :]
+        tail = chunk[-(around + len_pattern) :]
+        position += len(chunk) - len(tail)
 
 
 def peek_needle(
@@ -215,6 +210,9 @@ def peek_needle(
     hit: bool = False
 
     def handler(filepath: str | pathlib.Path, force_gzip: bool) -> None:
+
+        file_base_name: str = os.path.basename(filepath)
+
         with open_stream(filepath, force_gzip=force_gzip) as file:
             for i, match in enumerate(
                 scan_stream(file, needle, arround_context, buffer_size)
@@ -222,7 +220,7 @@ def peek_needle(
                 elapsed: float = time.time() - start
                 print(_render_match(match, needle, elapsed))
                 logging.info(
-                    f'filename="{os.path.basename(filepath)}"; {match}; {needle=}; {elapsed=}'
+                    f'filename="{file_base_name}"; {match}; {needle=}; {elapsed=}'
                 )
 
                 nonlocal hit
@@ -306,5 +304,7 @@ def conf(editor: str, restore: bool) -> None:
     default=False,
     help="Force gunzip read",
 )
+
 def needle(needle: str, haystack: str, force_gzip: bool) -> None:
+    """Find a needle in a haystack"""
     peek_needle(needle, haystack, force_gzip)
