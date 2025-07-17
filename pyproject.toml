@@ -1,5 +1,5 @@
 [project]
-name = "apollo"
+name = "pipeek"
 version = "0.1.0"
 description = "Pattern finder"
 authors = [{ name = "Danilo Patrial" }]
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-apollo = "pipeek.__main__:main"
+pipeek = "pipeek.__main__:main"
 
 [build-system]
 requires = ["setuptools"]
