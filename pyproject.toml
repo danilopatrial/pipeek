@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-apollo = "apollo.__main__:main"
+pipeek = "pipeek.__main__:main"
 
 [build-system]
 requires = ["setuptools"]
