@@ -57,7 +57,6 @@ except (ImportError, NameError):
     )
 
 from importlib.metadata import version, PackageNotFoundError
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 
@@ -305,19 +304,8 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option(
-    "-e",
-    "editor",
-    default="nvim",
-    show_default=True,
-    help="Editor to use (overrides $EDITOR env variable).",
-)
-@click.option(
-    "--restore",
-    is_flag=True,
-    default=False,
-    help="Restore default configuraion values.",
-)
+@click.option("-e", "editor", default="nvim", show_default=True, help="Editor to use (overrides $EDITOR env variable).")
+@click.option("--restore", is_flag=True, default=False, help="Restore default configuraion values.")
 def conf(editor: str, restore: bool) -> None:
     """Open the config file on NVim, or on a specified editor."""
 
@@ -338,17 +326,8 @@ def conf(editor: str, restore: bool) -> None:
 
 @cli.command()
 @click.argument("needle")
-@click.argument(
-    "haystack", nargs=-1, type=click.Path(exists=True), required=False, default=None
-)
-@click.option(
-    "-f",
-    "--force-gzip",
-    "force_gzip",
-    is_flag=True,
-    default=False,
-    help="Force gunzip read",
-)
+@click.argument("haystack", nargs=-1, type=click.Path(exists=True), required=False, default=None)
+@click.option("-f", "--force-gzip", "force_gzip", is_flag=True, default=False, help="Force gunzip read")
 def needle(needle: str, haystack: str | None, force_gzip: bool) -> None:
     """Find a needle in a haystack"""
     peek_needle(needle, haystack, force_gzip)
@@ -356,18 +335,9 @@ def needle(needle: str, haystack: str | None, force_gzip: bool) -> None:
 
 @cli.command()
 @click.argument("index", type=int)
-@click.argument(
-    "haystack", nargs=-1, type=click.Path(exists=True), required=False, default=None
-)
+@click.argument("haystack", nargs=-1, type=click.Path(exists=True), required=False, default=None)
 @click.option("--len", "len", type=int, default=10)
-@click.option(
-    "-f",
-    "--force-gzip",
-    "force_gzip",
-    is_flag=True,
-    default=False,
-    help="Force gunzip read",
-)
+@click.option("-f", "--force-gzip", "force_gzip", is_flag=True, default=False, help="Force gunzip read")
 def at(index: int, haystack: str | None, len: int, force_gzip: bool) -> None:
     """Peek at a given index."""
     peek_at(index, haystack, len, force_gzip)
