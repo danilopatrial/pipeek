@@ -1,5 +1,5 @@
 {
-    "buffer_size": 8388608,
-    "max_matches": 0,
-    "around_context": 20
+    "buffer_size": 18874368,
+    "max_matches": 10,
+    "around_context": 10
 }

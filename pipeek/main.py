@@ -36,9 +36,9 @@ except (ImportError, NameError):
 
 
 logging.basicConfig(
-    filename="pipeek.log",
+    filename="pipeek/pipeek/pipeek.log",
     filemode="w",
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(message)s",
     level=logging.DEBUG,
 )
 
@@ -153,10 +153,8 @@ def scan_stream(
         for idx in _iter_needle_indexes(data, pattern):
 
             absolute_position: int = position + idx + 1
-            left_context: bytes = data[max(0, idx - around)]
-            right_context: bytes = data[
-                idx + len(pattern) : idx + len(pattern) + around
-            ]
+            left_context: bytes = data[max(0, idx - around) : idx]
+            right_context: bytes = data[idx + len(pattern) : idx + len(pattern) + around]
 
             yield Match(absolute_position, left_context, right_context)
 
@@ -189,7 +187,7 @@ def peek_needle(
             ):
                 elapsed: float = time.time() - start
                 print(_render_match(match, needle, stdout_fmt, elapsed))
-                logging.info(f"{match=} {needle=} {elapsed=}")
+                logging.info(f"filename=\"{os.path.basename(filepath)}\"; {match}; {needle=}; {elapsed=}")
 
                 nonlocal hit
                 hit = True
