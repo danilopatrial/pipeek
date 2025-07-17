@@ -1,22 +1,18 @@
 [project]
-name = "pipeek"
+name = "apollo"
 version = "0.1.0"
-description = "Terminal media renderer."
+description = "Pattern finder"
 authors = [{ name = "Danilo Patrial" }]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy",
-    "opencv-python",
     "colorama",
     "click",
-    "pytube",
-    "yt-dlp",
     "platformdirs"
 ]
 
 [project.scripts]
-pipeek = "pipeek.__main__:main"
+apollo = "pipeek.__main__:main"
 
 [build-system]
 requires = ["setuptools"]
