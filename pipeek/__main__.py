@@ -2,6 +2,7 @@ import logging
 import os
 
 from . import const_def as c
+from .cli import main
 
 if __name__ == "__main__":
 

@@ -19,3 +19,10 @@ CYAN: str = "\033[36m"
 BOLD: str = "\033[1m"
 RESET: str = "\033[0m"
 DIM: str = "\033[2m"
+
+STANDARD_CONFIG: dict = {
+    "buffer_size": "8M",
+    "max_matches": 0,
+    "around_context": 10,
+    "haystack_path": None,
+}

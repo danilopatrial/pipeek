@@ -288,7 +288,7 @@ def peek_needle(
 
 def pkg_version() -> str:
     try:
-        current_version: str = version("apollo")
+        current_version: str = version("pipeek")
     except PackageNotFoundError:
         current_version: str = "uknown"
 
