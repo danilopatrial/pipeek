@@ -2,7 +2,7 @@ import logging
 import os
 
 from . import const_def as c
-from .cli import main
+from .cli import cli as main
 
 if __name__ == "__main__":
 
@@ -15,3 +15,5 @@ if __name__ == "__main__":
         format="%(asctime)s - %(message)s",
         level=logging.DEBUG,
     )
+
+    main()
