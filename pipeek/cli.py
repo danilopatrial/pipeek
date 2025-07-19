@@ -11,8 +11,7 @@ import subprocess
 import json
 
 from . import const_def as c
-
-from .src import peek_needle, peek_at
+from . import src
 
 def pkg_version() -> str:
     try:
@@ -58,7 +57,7 @@ def conf(editor: str, restore: bool) -> None:
 @click.option("-f", "--force-gzip", "force_gzip", is_flag=True, default=False, help="Force gunzip read")
 def needle(needle: str, haystack: str | None, force_gzip: bool) -> None:
     """Find a needle in a haystack"""
-    peek_needle(needle, haystack, force_gzip)
+    src.peek_needle(needle, haystack, force_gzip)
 
 
 @cli.command()
@@ -68,4 +67,4 @@ def needle(needle: str, haystack: str | None, force_gzip: bool) -> None:
 @click.option("-f", "--force-gzip", "force_gzip", is_flag=True, default=False, help="Force gunzip read")
 def at(index: int, haystack: str | None, len: int, force_gzip: bool) -> None:
     """Peek at a given index."""
-    peek_at(index, haystack, len, force_gzip)
+    src.peek_at(index, haystack, len, force_gzip)

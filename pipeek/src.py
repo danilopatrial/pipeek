@@ -42,13 +42,6 @@ __ABSOLUTE_TIME_STAMP: float = time.time()
 
 
 class __ConfAccess(object):
-    _instance: __ConfAccess | None = None
-
-    def __new__(cls, *args, **kwargs) -> __ConfAccess:
-        if cls._instance:
-            raise Exception("Two or more __ConfAcces instances can not coexit.")
-        cls._instance = super().__new__(cls)
-
     def __init__(self) -> None:
         with open(c.JSON_CONFIG_PATH, "r", encoding="utf-8") as file:
             self._conf_dict: dict = json.load(file)
@@ -74,6 +67,8 @@ class __ConfAccess(object):
 
         self.__init__()
 
+
+global conf
 conf: __ConfAccess = __ConfAccess()
 
 
@@ -126,7 +121,7 @@ def echo_match(  # same as a __str__ method for PipeekMatch cls.
 
     file: "_t.SupportsWrite[str]" = sys.stdout if not file else file
 
-    file.write(f"{left_context}{match_value}{right_context} {raw_info}")
+    file.write(f"{left_context}{match_value}{right_context} {raw_info}\n")
 
     if log:
         logging.info(match)
