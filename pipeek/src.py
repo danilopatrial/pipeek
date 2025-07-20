@@ -16,6 +16,7 @@ import collections
 import warnings
 import time
 import logging
+import mmap
 import typing as t
 
 from pathlib import Path
@@ -68,7 +69,6 @@ class __ConfAccess(object):
         self.__init__()
 
 
-global conf
 conf: __ConfAccess = __ConfAccess()
 
 
@@ -221,7 +221,8 @@ def peek_needle(
     haystack: "t.Optional[_t.GenericPath[t.AnyStr]]" = None,
     force_gzip: bool = False,
 ) -> t.NoReturn:
-    """Find needle in a haystack (haystack beeing a `GenericPath` not a `AnyStr`)
+    """
+    Find needle in a haystack (haystack beeing a `GenericPath` not a `AnyStr`)
 
     *NOTE: This function is not meant to be imported. Its CLI use only.
     And because of this will exit the code after running. Here is a simplified
@@ -313,3 +314,66 @@ def peek_at(
         _handler(file)
 
     sys.exit(0 if hit else 1)
+
+
+def peek_twofold(
+    substring_length: int,
+    prefix_length: int,
+    skip_bytes: int = 2,
+    haystack: "t.Optional[_t.GenericPath[t.AnyStr]]" = None,
+    force_gzip: bool = False,
+) -> t.NoReturn:
+
+    # TODO: better docs
+    """
+    Search duplicates.
+
+    peek_twofold(n) is the first n-digit substring to repeat in a given haystack.
+    """
+
+    prefixes: list = [  # [b"01", b"02", ...]
+        str(i).zfill(prefix_length).encode()
+        for i in range(10 ** prefix_length)
+    ]
+
+    colisions: dict = {}
+
+    def _handler(filepath: Path, prefix: bytes) -> None:
+        file_base_name: str = os.path.basename(filepath)
+        index: int = 0
+
+        with open_stream(filepath, force_gzip=force_gzip) as file:
+            skip = file.read(skip_bytes)
+
+            # TODO: read with buffer limited size
+            mm: mmap.mmap = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
+
+            for i in range(len(mm) - substring_length + 1):
+                window: bytes = mm[i:i + substring_length]
+
+                index += 1
+
+                if not window.startswith(prefix):
+                    continue
+
+                r: int = colisions.get(window, -1)
+
+                if r == -1:
+                    colisions.update({window: index})
+                    if (i := len(colisions)) % 500 == 0:
+                        # TODO: fix this to show memory usage
+                        print(f"Colisions len = {i}", end="\r", flush=True)
+                else:
+                    print(f"{file_base_name} - {prefix=} - Colision found at {index=} and index={colisions[window]} - Seq1={window}")
+
+        colisions.clear()
+
+    haystack = conf.haystack_path if not haystack else haystack
+
+    for file in walk(haystack):
+        for prefix in prefixes:
+            # TODO: Better ui
+            print(f"Serach at {os.path.basename(file)} - {prefix=}")
+            _handler(file, prefix)
+
+    sys.exit(0)

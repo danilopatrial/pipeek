@@ -68,3 +68,13 @@ def needle(needle: str, haystack: str | None, force_gzip: bool) -> None:
 def at(index: int, haystack: str | None, len: int, force_gzip: bool) -> None:
     """Peek at a given index."""
     src.peek_at(index, haystack, len, force_gzip)
+
+
+@cli.command()
+@click.argument("substring_length", type=int)
+@click.argument("haystack", nargs=-1, type=click.Path(exists=True), required=False, default=None)
+@click.option("--prefix-len", "prefix_length", type=int, default=1, show_default=True)
+@click.option("--skip-bytes", "skip_bytes", type=int, default=2, show_default=True)
+@click.option("-f", "--force-gzip", "force_gzip", is_flag=True, default=False, help="Force gunzip read")
+def twofold(substring_length: int, prefix_length: int, skip_bytes: int, haystack: str, force_gzip: bool) -> None:
+    src.peek_twofold(substring_length, prefix_length, skip_bytes, haystack, force_gzip)
