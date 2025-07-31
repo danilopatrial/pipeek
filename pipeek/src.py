@@ -17,6 +17,7 @@ import warnings
 import time
 import logging
 import mmap
+import psutil
 import typing as t
 
 from pathlib import Path
@@ -37,6 +38,17 @@ except ImportError:
 
 if t.TYPE_CHECKING:
     import _typeshed as _t
+
+
+RESET = "\033[0m"
+BOLD = "\033[1m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+MAGENTA = "\033[35m"
+CYAN = "\033[36m"
+GRAY = "\033[90m"
 
 
 __ABSOLUTE_TIME_STAMP: float = time.time()
@@ -315,7 +327,6 @@ def peek_at(
 
     sys.exit(0 if hit else 1)
 
-
 def peek_twofold(
     substring_length: int,
     prefix_length: int,
@@ -323,57 +334,68 @@ def peek_twofold(
     haystack: "t.Optional[_t.GenericPath[t.AnyStr]]" = None,
     force_gzip: bool = False,
 ) -> t.NoReturn:
-
-    # TODO: better docs
     """
-    Search duplicates.
-
-    peek_twofold(n) is the first n-digit substring to repeat in a given haystack.
+    Scans files for the first repeating n-digit substring starting with a given prefix.
     """
 
-    prefixes: list = [  # [b"01", b"02", ...]
+    prefixes: list = [
         str(i).zfill(prefix_length).encode()
         for i in range(10 ** prefix_length)
     ]
 
-    colisions: dict = {}
+    colisions: dict[bytes, int] = {}
+
+    def memory_usage() -> str:
+        """Returns memory usage of the current process in MB."""
+        process = psutil.Process(os.getpid())
+        mem_mb = process.memory_info().rss / (1024 ** 2)
+        return f"{mem_mb:.2f} MB"
 
     def _handler(filepath: Path, prefix: bytes) -> None:
         file_base_name: str = os.path.basename(filepath)
         index: int = 0
 
         with open_stream(filepath, force_gzip=force_gzip) as file:
-            skip = file.read(skip_bytes)
-
-            # TODO: read with buffer limited size
+            file.read(skip_bytes)
             mm: mmap.mmap = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
 
             for i in range(len(mm) - substring_length + 1):
                 window: bytes = mm[i:i + substring_length]
-
                 index += 1
 
                 if not window.startswith(prefix):
                     continue
 
-                r: int = colisions.get(window, -1)
+                previous_index: int = colisions.get(window, -1)
 
-                if r == -1:
-                    colisions.update({window: index})
-                    if (i := len(colisions)) % 500 == 0:
-                        # TODO: fix this to show memory usage
-                        print(f"Colisions len = {i}", end="\r", flush=True)
+                if previous_index == -1:
+                    colisions[window] = index
+                    if (n := len(colisions)) % 500 == 0:
+                        print(
+                            f"[{file_base_name}] "
+                            f"{YELLOW}{prefix.decode()}{RESET} - "
+                            f"Num colisions: {YELLOW}{n}{RESET}, memory usage: {YELLOW}{memory_usage()}{RESET}",
+                            end="\r",
+                            flush=True
+                        )
                 else:
-                    print(f"{file_base_name} - {prefix=} - Colision found at {index=} and index={colisions[window]} - Seq1={window}")
+                    print(
+                        f"{GREEN}[MATCH FOUND]{RESET} "
+                        f"{file_base_name} - "
+                        f"prefix = {YELLOW}{prefix.decode()}{RESET} - "
+                        f"Found at index: {index}, "
+                        f"previously at index: {previous_index} - "
+                        f"Seq = {YELLOW}{window}{RESET}"
+                    )
 
         colisions.clear()
 
     haystack = conf.haystack_path if not haystack else haystack
 
+    print(f"\n\tScanning directory: {haystack}\n")
     for file in walk(haystack):
         for prefix in prefixes:
-            # TODO: Better ui
-            print(f"Serach at {os.path.basename(file)} - {prefix=}")
             _handler(file, prefix)
 
+    print(f"\n{GREEN}Scan complete.{RESET}")
     sys.exit(0)
